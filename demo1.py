@@ -86,12 +86,11 @@ def draw_3d_lines(df_list: List[Union[DataFrame]]):
 # draw 3d scatters
 def draw_3d_scatters(df_list: List[Union[DataFrame]]):
     # 将点云concat
-
     pass
 
 
 if __name__ == '__main__':
-    split_files(150)
+    # split_files(150)
     df_list = read_csvs('xlsx')
     draw_3d_lines(df_list)
     pass
