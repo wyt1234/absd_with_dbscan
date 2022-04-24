@@ -86,12 +86,41 @@ def draw_3d_lines(df_list: List[Union[DataFrame]]):
 # draw 3d scatters
 def draw_3d_scatters(df_list: List[Union[DataFrame]]):
     # 将点云concat
-    pass
+    df = pd.concat(df_list)
+    df = df.dropna()
+    X = df[['lat', 'lon', 'geoaltitude']].to_numpy()
+    db = DBSCAN(eps=0.3, min_samples=10).fit(X)
+    core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+    core_samples_mask[db.core_sample_indices_] = True
+    labels = db.labels_
 
+    # Number of clusters in labels, ignoring noise if present.
+    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise_ = list(labels).count(-1)
+
+    print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels))
+    X = np.column_stack([X, labels])
+    X = X[X[:, 3] != -1]
+    # 类的数量 -> 取出排名前N个类
+    ord_dic_list = [{'cluster_index': i, 'amt': len(X[X[:, 3] == i])} for i in range(n_clusters_)]
+    ord_dic_list = sorted(ord_dic_list, key=lambda x: x['amt'], reverse=True)
+    topk_cluster = [ord_dic_list[i]['cluster_index'] for i in range(50)]  # todo hyperparam
+    # 开始绘制散点图
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    for cluster_index in topk_cluster:
+        temp_nd = X[X[:, 3] == cluster_index]
+        xs = temp_nd[:,0]
+        ys = temp_nd[:,1]
+        zs = temp_nd[:,2]
+        m = 'o'
+        ax.scatter(xs, ys, zs, marker=m)
+    plt.show()
 
 if __name__ == '__main__':
     ############# todo 如果是第一次跑放开下面这行方法注释 ###########
-    split_files(150)  # 切分文件到xlsx目录
+    # split_files(150)  # 切分文件到xlsx目录
     ##########################################################
     df_list = read_csvs('xlsx')
-    draw_3d_lines(df_list)
+    # draw_3d_lines(df_list)
+    draw_3d_scatters(df_list)
