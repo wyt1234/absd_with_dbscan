@@ -78,7 +78,7 @@ def draw_3d_lines(df_list: List[Union[DataFrame]]):
         y = df_np[:, 1]
         z = df_np[:, 2]
         # ax.plot(x, y, z, label=u'航迹示意图')
-        ax.plot(x, y, z)
+        ax.plot(x, y, z, lw=0.5)
     # ax.legend()
     plt.show()
 
@@ -90,7 +90,8 @@ def draw_3d_scatters(df_list: List[Union[DataFrame]]):
 
 
 if __name__ == '__main__':
-    # split_files(150)
+    ############# todo 如果是第一次跑放开下面这行方法注释 ###########
+    split_files(150)  # 切分文件到xlsx目录
+    ##########################################################
     df_list = read_csvs('xlsx')
     draw_3d_lines(df_list)
-    pass
