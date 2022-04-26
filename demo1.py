@@ -22,9 +22,11 @@ from sklearn.preprocessing import StandardScaler
 
 
 # read csv
-def read_csvs(suffix='csv'):
+def read_csvs(suffix='csv', file_root=''):
+    if not file_root:
+        file_root = suffix
     result_dfs_list = []
-    root = pathlib.Path(suffix)
+    root = pathlib.Path(file_root)
     files_glob = root.rglob('*.' + suffix)
     for file in tqdm(files_glob):
         if suffix == 'csv':
@@ -83,12 +85,35 @@ def draw_3d_lines(df_list: List[Union[DataFrame]]):
     plt.show()
 
 
+# 点图航迹带标签
+def draw_line_scatters(df_list: List[DataFrame]):
+    # mandarin support
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
+    expand = 2
+    ax = plt.figure(figsize=[6.4 * expand, 4.8 * expand], dpi=100.0 / expand).add_subplot(projection='3d')
+    for df in df_list:
+        df_np = df[['lat', 'lon', 'geoaltitude']].to_numpy()
+        x = df_np[:, 0]
+        y = df_np[:, 1]
+        z = df_np[:, 2]
+        # ax.plot(x, y, z, label=u'航迹示意图')
+        ax.scatter(x, y, z, marker='o', s=0.05)
+    # ax.legend()
+    ax.set_xlabel("lat")
+    ax.set_ylabel("lon")
+    ax.set_zlabel("geoaltitude")
+    ax.set_title("航迹点云")
+    plt.show()
+
+
 # draw 3d scatters
 def draw_3d_scatters(df_list: List[Union[DataFrame]]):
     # 将点云concat
     df = pd.concat(df_list)
     df = df.dropna()
     X = df[['lat', 'lon', 'geoaltitude']].to_numpy()
+    # todo 聚类时加入航向和航速特征并归一化
     db = DBSCAN(eps=0.3, min_samples=10).fit(X)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
@@ -110,17 +135,20 @@ def draw_3d_scatters(df_list: List[Union[DataFrame]]):
     ax = fig.add_subplot(projection='3d')
     for cluster_index in topk_cluster:
         temp_nd = X[X[:, 3] == cluster_index]
-        xs = temp_nd[:,0]
-        ys = temp_nd[:,1]
-        zs = temp_nd[:,2]
+        xs = temp_nd[:, 0]
+        ys = temp_nd[:, 1]
+        zs = temp_nd[:, 2]
         m = 'o'
         ax.scatter(xs, ys, zs, marker=m)
     plt.show()
+
 
 if __name__ == '__main__':
     ############# todo 如果是第一次跑放开下面这行方法注释 ###########
     # split_files(150)  # 切分文件到xlsx目录
     ##########################################################
-    df_list = read_csvs('xlsx')
-    # draw_3d_lines(df_list)
-    draw_3d_scatters(df_list)
+    # df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据')
+    df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据\M-C17运输-AE1450')
+    # draw_3d_lines(df_list)  # 折现航迹
+    draw_line_scatters(df_list)  # 散点航迹
+    # draw_3d_scatters(df_list) # 聚类散点
