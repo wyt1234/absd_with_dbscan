@@ -86,13 +86,15 @@ def draw_3d_lines(df_list: List[Union[DataFrame]]):
 
 
 # 点图航迹带标签
-def draw_line_scatters(df_list: List[DataFrame]):
+def draw_line_scatters(df_list: List[DataFrame], random_rate=1.0):
     # mandarin support
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     expand = 2
     ax = plt.figure(figsize=[6.4 * expand, 4.8 * expand], dpi=100.0 / expand).add_subplot(projection='3d')
     for df in df_list:
+        if random.random() > random_rate:
+            continue
         df_np = df[['lat', 'lon', 'geoaltitude']].to_numpy()
         x = df_np[:, 0]
         y = df_np[:, 1]
@@ -100,9 +102,9 @@ def draw_line_scatters(df_list: List[DataFrame]):
         # ax.plot(x, y, z, label=u'航迹示意图')
         ax.scatter(x, y, z, marker='o', s=0.05)
     # ax.legend()
-    ax.set_xlabel("lat")
-    ax.set_ylabel("lon")
-    ax.set_zlabel("geoaltitude")
+    ax.set(xlim3d=(10, 60), xlabel='lat')
+    ax.set(ylim3d=(-150, -40), ylabel='lon')
+    ax.set(zlim3d=(0, 12000), zlabel='geoaltitude')
     ax.set_title("航迹点云")
     plt.show()
 
@@ -147,8 +149,8 @@ if __name__ == '__main__':
     ############# todo 如果是第一次跑放开下面这行方法注释 ###########
     # split_files(150)  # 切分文件到xlsx目录
     ##########################################################
-    # df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据')
-    df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据\M-C17运输-AE1450')
+    df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据')
+    # df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据\M-C17运输-AE1450')
     # draw_3d_lines(df_list)  # 折现航迹
-    draw_line_scatters(df_list)  # 散点航迹
+    draw_line_scatters(df_list, random_rate=0.15)  # 散点航迹
     # draw_3d_scatters(df_list) # 聚类散点
