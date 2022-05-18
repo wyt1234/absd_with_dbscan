@@ -28,6 +28,7 @@ def read_csvs(suffix='csv', file_root=''):
     result_dfs_list = []
     root = pathlib.Path(file_root)
     files_glob = root.rglob('*.' + suffix)
+    files_glob = [x for x in files_glob]
     for file in tqdm(files_glob):
         if suffix == 'csv':
             df = pd.read_csv(file)
@@ -150,9 +151,20 @@ def draw_3d_scatters2(df_list: List[Union[DataFrame]], random_rate=1.0):
     # 将点云concat
     df = pd.concat(df_list)
     df = df.dropna()
+    # 在控制台打印航向和航速的基本信息
+    print("航速：")
+    print(df['velocity'].describe())
+    print("航向：")
+    print(df['heading'].describe())
+    ''' -----需要航向航速限定范围------- '''
+    velocity_range = (500, 1000)
+    heading_range = (500, 1000)
+    # df = df[(df['velocity'] > velocity_range[0]) & (df['velocity'] < velocity_range[1])]
+    # df = df[(df['heading'] > velocity_range[0]) & (df['heading'] < velocity_range[1])]
+    ''' ---------------------------- '''
     df = df.sample(frac=random_rate)  # 按比例随机采样
     X = df[['lat', 'lon', 'geoaltitude', 'velocity', 'heading']].to_numpy()
-    # todo 聚类时加入航向和航速特征并归一化
+    # 聚类时加入航向和航速特征并归一化
     db = DBSCAN(eps=0.3, min_samples=10).fit(X)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
@@ -169,13 +181,12 @@ def draw_3d_scatters2(df_list: List[Union[DataFrame]], random_rate=1.0):
     # 类的数量 -> 取出排名前N个类
     ord_dic_list = [{'cluster_index': i, 'amt': len(X[X[:, 5] == i])} for i in range(n_clusters_)]
     ord_dic_list = sorted(ord_dic_list, key=lambda x: x['amt'], reverse=True)
-    topk_cluster = [ord_dic_list[i]['cluster_index'] for i in range(5)]  # todo hyperparam
+    topk_cluster = [ord_dic_list[i]['cluster_index'] for i in range(5)]  # fixme 超参数：这个5代表取数量排名前5的类
     # 开始绘制散点图
     # mandarin support
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     expand = 2
-    fig = plt.figure()
     ax = plt.figure(figsize=[6.4 * expand, 4.8 * expand], dpi=100.0 / expand).add_subplot(projection='3d')
     # 绘制没有被分类的点云为灰色
     temp_nd = X_nagetive
@@ -192,7 +203,7 @@ def draw_3d_scatters2(df_list: List[Union[DataFrame]], random_rate=1.0):
         zs = temp_nd[:, 2]
         m = 'o'
         ax.scatter(xs, ys, zs, marker=m, s=100.0)
-    ax.legend()
+    ax.legend(['类别top'] + [f"第{str(i + 1)}类" for i, c in enumerate(topk_cluster)])
     ax.set(xlim3d=(10, 60), xlabel='lat')
     ax.set(ylim3d=(-150, 100), ylabel='lon')
     ax.set(zlim3d=(0, 12000), zlabel='geoaltitude')
@@ -207,5 +218,5 @@ if __name__ == '__main__':
     df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据')
     # df_list = read_csvs('csv', 'D:\Repo\dbscan_absd\爬取数据\M-C17运输-AE1450')
     # draw_3d_lines(df_list)  # 折现航迹
-    draw_line_scatters(df_list, random_rate=0.15)  # 散点航迹
+    # draw_line_scatters(df_list, random_rate=0.15)  # 散点航迹
     draw_3d_scatters2(df_list, random_rate=0.012)  # 聚类散点
