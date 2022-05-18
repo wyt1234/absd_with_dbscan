@@ -157,10 +157,10 @@ def draw_3d_scatters2(df_list: List[Union[DataFrame]], random_rate=1.0):
     print("航向：")
     print(df['heading'].describe())
     ''' -----需要航向航速限定范围------- '''
-    velocity_range = (500, 1000)
-    heading_range = (500, 1000)
-    # df = df[(df['velocity'] > velocity_range[0]) & (df['velocity'] < velocity_range[1])]
-    # df = df[(df['heading'] > velocity_range[0]) & (df['heading'] < velocity_range[1])]
+    velocity_range = (0, 100000)
+    heading_range = (0, 100000)
+    df = df[(df['velocity'] > velocity_range[0]) & (df['velocity'] < velocity_range[1])]
+    df = df[(df['heading'] > velocity_range[0]) & (df['heading'] < velocity_range[1])]
     ''' ---------------------------- '''
     df = df.sample(frac=random_rate)  # 按比例随机采样
     X = df[['lat', 'lon', 'geoaltitude', 'velocity', 'heading']].to_numpy()
