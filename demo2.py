@@ -54,7 +54,7 @@ def draw_3d_scatters2(df_list: List[Union[DataFrame]], random_rate=1.0):
     df = df[(df['velocity'] > velocity_range[0]) & (df['velocity'] < velocity_range[1])]
     df = df[(df['heading'] > velocity_range[0]) & (df['heading'] < velocity_range[1])]
     ''' ---------------------------- '''
-    df = df.sample(frac=random_rate)  # 按比例随机采样
+    df = df.sample(frac=random_rate, random_state=888)  # 按比例随机采样
     X = df[['lat', 'lon', 'geoaltitude', 'velocity', 'heading']].to_numpy()
     # 聚类时加入航向和航速特征并归一化
     db = DBSCAN(eps=200, min_samples=10).fit(X)
